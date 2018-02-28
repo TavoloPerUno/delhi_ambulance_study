@@ -1025,4 +1025,4 @@ Three API calls are made for each crash - POI pair, to fetch 'best_guess', 'opti
 
 Putting all the above modules together,
 
-![title](modules.png)
+![title](Modules.png)
