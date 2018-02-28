@@ -9,7 +9,8 @@ def get_next_weekday(startdate, weekday):
     @startdate: given date, in format '2013-05-25'
     @weekday: week day as a integer, between 0 (Monday) to 6 (Sunday)
     """
-    t = timedelta((7 + weekday - startdate.weekday()) % 7)
+    t = timedelta(days = (datetime.datetime.now(startdate.tzinfo) - startdate).days + 1 + timedelta((7 + weekday - datetime.datetime.now(startdate.tzinfo).weekday()) % 7).days)
+
     return (startdate + t)
 
 def random_date(start, end):
@@ -40,3 +41,14 @@ def tidy_maxspeed_tuple_to_int(val):
         return float(val)
     elif math.isnan(val):
         return np.nan
+
+def chunkIt(seq, num):
+    avg = len(seq) / float(num)
+    out = []
+    last = 0.0
+
+    while last < len(seq):
+        out.append(seq[int(last):int(last + avg)])
+        last += avg
+
+    return out

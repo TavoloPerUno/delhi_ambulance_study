@@ -11,73 +11,81 @@ import networkx as nx
 import pandana as pdna
 import geopandas as gpd
 import shutil
+import ast
+import math
+from delhi_ambulance_study import util
+import numpy as np
 
 
 
 gmaps = googlemaps.Client(key='AIzaSyCC6DUYR8zCoWDX_RCaEXCcz3ZmXgS5X38')
 
-def get_trip_duration(lat1, lng1, lat2, lng2, dep_time, key, key_id=0):
-    res_best_guess = ''
-    res_optimistic = ''
-    res_pessimistic = ''
 
-    gmaps = googlemaps.Client(key=key)
-
-
-
-    res_best_guess = gmaps.directions(str(lat1) + ',' + str(lng1), str(lat2) + ',' + str(lng2),
-                                          mode='driving', waypoints=None, alternatives=False, avoid=None,
-                                          language=None, units='metric', region=None, departure_time=dep_time,
-                                          arrival_time=None, optimize_waypoints=False, transit_mode=None,
-                                          transit_routing_preference=None, traffic_model="best_guess")
-
-
-
-    res_optimistic = gmaps.directions(str(lat1) + ',' + str(lng1), str(lat2) + ',' + str(lng2),
-                                              mode='driving', waypoints=None, alternatives=False, avoid=None,
-                                              language=None, units='metric', region=None, departure_time=dep_time,
-                                              arrival_time=None, optimize_waypoints=False, transit_mode=None,
-                                              transit_routing_preference=None, traffic_model="optimistic")
-
-
-    res_pessimistic = gmaps.directions(str(lat1) + ',' + str(lng1), str(lat2) + ',' + str(lng2),
-                                       mode='driving', waypoints=None, alternatives=False, avoid=None,
-                                       language=None, units='metric', region=None, departure_time=dep_time,
-                                       arrival_time=None, optimize_waypoints=False, transit_mode=None,
-                                       transit_routing_preference=None, traffic_model="pessimistic")
-
-    best_time = 0
-    pessimistic_time = 0
-    optimistic_time = 0
-
-    for lg in res_best_guess[0]['legs']:
-        best_time += lg['duration']['value']
-
-    for lg in res_optimistic[0]['legs']:
-        optimistic_time += lg['duration']['value']
-
-    for lg in res_pessimistic[0]['legs']:
-        pessimistic_time += lg['duration']['value']
-
-    return [best_time, optimistic_time, pessimistic_time]
 
 def get_street_network(query_dict, output_folder, area_name):
     G = ox.graph_from_place(query_dict, network_type='drive_service')
     G_projected = ox.project_graph(G)
 
     ox.save_graph_shapefile(G_projected, filename=os.path.join(output_folder, area_name))
-    shutil.move(os.path.join('data', area_name), os.path.join(output_folder, area_name))
+    try:
+        shutil.rmtree(os.path.join(output_folder, area_name))
+    except OSError:
+        pass
+    shutil.move(os.path.join('data', area_name), os.path.join(output_folder))
     shutil.rmtree('data')
     ox.save_graphml(G, filename=area_name + '.graphml', folder=os.path.join(output_folder, area_name))
     return G
 
-def graph_to_pandananet(osmgraph):
-    gdf_nodes = ox.graph_to_gdfs(osmgraph, edges=False)
-    gdf_edges = ox.graph_to_gdfs(osmgraph, nodes=False)
+def generate_speed_weights(gdf_edges, output_folder):
+    gdf_edges_orig = gdf_edges.copy()
+    gdf_edges['highway'] = list(map(str, gdf_edges['highway']))
+    gdf_edges['maxspeed'] = list(map(util.tidy_maxspeed_tuple_to_int, gdf_edges['maxspeed']))
+    dct_min_speed_by_category = dict(
+        gdf_edges.loc[gdf_edges['maxspeed'].notnull()].groupby('highway')['maxspeed'].min())
 
-    twoway = list(~gdf_edges["oneway"].values)
-    pdnet = pdna.Network(gdf_nodes["x"], gdf_nodes["y"], gdf_edges["u"], gdf_edges["v"],
-                             gdf_edges[["length"]], twoway=twoway)
+    for idx, row in gdf_edges.loc[gdf_edges['maxspeed'].isnull()].iterrows():
+        maxspeed = dct_min_speed_by_category.get(row['highway'], np.nan)
+        if math.isnan(maxspeed):
+            try:
+                combo_types = ast.literal_eval(row['highway'])
+                maxspeed = min([speed for speed in
+                                [dct_min_speed_by_category.get(highwaytype, np.nan) for highwaytype in combo_types] if
+                                not math.isnan(speed)])
+
+            except:
+                pass
+
+        gdf_edges.loc[idx, 'maxspeed'] = maxspeed
+
+    dct_min_speed_by_category['secondary_link'] = 35
+    gdf_edges.loc[gdf_edges['highway'] == 'secondary_link', 'maxspeed'] = 35
+
+    dct_min_speed_by_category['road'] = 15
+    gdf_edges.loc[gdf_edges['highway'] == 'road', 'maxspeed'] = 15
+
+    gdf_edges['time_to_traverse'] = gdf_edges['length'] / gdf_edges['maxspeed']
+
+    gdf_edges_orig['time_to_traverse'] = gdf_edges['time_to_traverse']
+
+    gdf_edges = gdf_edges_orig.copy()
+
+    ox.save_load.save_gdf_shapefile(gdf_edges, filename="edges_edited", folder=os.path.join(output_folder, 'ncr'))
+
+    return gdf_edges_orig
+
+def graph_to_pandananet(gdf_edges,
+                        gdf_nodes
+                        ):
+
+    twoway = list(~gdf_edges['oneway'].values)
+
+    pdnet = pdna.Network(gdf_nodes['x'],
+                         gdf_nodes['y'],
+                         gdf_edges['u'],
+                         gdf_edges['v'],
+                         gdf_edges[["time_to_traverse"]],
+                         twoway=twoway
+                         )
 
     return pdnet
 
