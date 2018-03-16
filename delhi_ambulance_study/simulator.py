@@ -541,7 +541,11 @@ def simulate(dctlst_places=DCTLST_PLACES,
 
     print(dct_ntaxi_response)
 
+with open(os.path.join(DATA_FOLDER, 'dct_key_stats.pickle'), 'rb') as handle:
+    dct_key_stats = pickle.load(handle)
+
 simulate(dctlst_places=DCTLST_PLACES,
          max_ntaxi=100,
          min_ntaxi=99,
          ncores=8)
+
