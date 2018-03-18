@@ -11775,7 +11775,7 @@ div#notebook {
 
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">IPython.display</span> <span class="k">import</span> <span class="n">HTML</span>
@@ -11804,7 +11804,7 @@ div#notebook {
 
 
 <div class="output_area">
-<div class="prompt output_prompt">Out[3]:</div>
+<div class="prompt output_prompt">Out[4]:</div>
 
 
 <div class="output_html rendered_html output_subarea output_execute_result">
@@ -13459,18 +13459,30 @@ To toggle on/off the raw code, click <a href="javascript:code_toggle()">here</a>
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
 <div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Conclusion">Conclusion<a class="anchor-link" href="#Conclusion">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<ul>
+<li>Our methodology will help us arrive at possible response times for taxi sets of various sizes.</li>
+<li>We use Google Directions API to get travel time information. Since all crash points are in the past, we shift them to future time points in such a way that their weekdays and time of the day remain the same, and use these shifted time points as departure times in Google Directions API calls.</li>
+<li>Our methodology has a number of similar computations, and they consume a lot of time. To save time, we divide the crash dataset into multiple chunks and process them in parallel.</li>
+<li>Crash - taxi travel time for a given taxi set size can have uncertainties arising out of crash - taxi combinations. We incorporate this by computing crash - taxi travel times with multiple taxi sets of the same size to arrive at that size's mean crash-taxi travel time.</li>
+<li>Google directions API returns three types of travel times viz., optimistic, best guess and pessimistic. Our analysis will also yield three response times to account for these possibilities.</li>
+</ul>
 
 </div>
 </div>
-</div>
-
 </div>
     </div>
   </div>
