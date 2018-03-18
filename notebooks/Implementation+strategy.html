@@ -11775,7 +11775,7 @@ div#notebook {
 
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[23]:</div>
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">IPython.display</span> <span class="k">import</span> <span class="n">HTML</span>
@@ -11804,7 +11804,7 @@ div#notebook {
 
 
 <div class="output_area">
-<div class="prompt output_prompt">Out[23]:</div>
+<div class="prompt output_prompt">Out[3]:</div>
 
 
 <div class="output_html rendered_html output_subarea output_execute_result">
@@ -11830,9 +11830,31 @@ To toggle on/off the raw code, click <a href="javascript:code_toggle()">here</a>
 </div>
 
 </div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Taxi-Ambulance-Project-Overview">Taxi Ambulance Project Overview<a class="anchor-link" href="#Taxi-Ambulance-Project-Overview">&#182;</a></h1><h2 id="Introduction">Introduction<a class="anchor-link" href="#Introduction">&#182;</a></h2><p>We want to explore the possibility of using taxis in New Delhi as an on-call ambulance service. We would train a certain number of taxis to act as an on-call ambulance, meaning they would be able to receive a call to go to a vehicle collision site, load an injured person into the vehicle, and deliver them to the closest hospital. The time between the event of a collision and the arrival of the victims at the hospital is known as the response time. If only 10 taxis in New Delhi are trained as ambulances, then it would likely take a long time for one of those taxis to get to an accident site and to the hospital. On the other hand, if every taxi could act as an ambulance, response time would be very low, but this would be difficult and expensive to implement. We want to use data to figure out how many taxis we would need to train in order reduce the average response time below a certain benchmark.</p>
+<h2 id="Data-Resources">Data Resources<a class="anchor-link" href="#Data-Resources">&#182;</a></h2><p>We have a geocoded list of hospitals that will receive crash victims. We have a record of past fatal vehicle crashes, with date, time, and location. We also have a record of the location of each New Delhi taxi at every minute, though this seems a little dubious.</p>
+<h2 id="Method">Method<a class="anchor-link" href="#Method">&#182;</a></h2><p>We create a model that can take a certain number of trained taxis and output the average response time, using all of our data resources listed above. When we run the model on a range of different numbers of trained taxis we will create a response time curve that will help us pick the optimal number of trained taxis.</p>
+<p>In basic terms our model does the following: given a random set of say 50 trained taxis, for each fatal accident in our record we find the time it would take for the closest trained taxi to arrive at the accident and add that to the time it would take to then drive from the accident to the closest hospital. This sum is one response time for this set of 50 of taxis, and we average that time for all the fatal accidents to find the average response time for those 50 taxis. To account for uncertainty in response time due to crash-taxi locations, we resample the same number of taxis and recompute response times a number of times to arrive at the mean response time for 50 taxis. When we repeat this process for 100 trained taxis, 200 trained taxis, and every number in between, we can see how response time decreases as we use more trained taxis. The goal is to pick the ideal number of trained taxis to get the response time below a certain threshold.</p>
+<p>The overall execution pipeline consists of the following components,</p>
+<ol>
+<li>Data Generation</li>
+<li>Nearest Hospital Estimation</li>
+<li>Nearest Taxi Estimation</li>
+<li>Summary statistic compilation</li>
+</ol>
+<p>and can be visualised as,</p>
+<p><img src="Implementation - Overview.png" alt="title"></p>
+
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">warnings</span>
@@ -11906,7 +11928,7 @@ To toggle on/off the raw code, click <a href="javascript:code_toggle()">here</a>
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Hospital-Locations">Hospital Locations<a class="anchor-link" href="#Hospital-Locations">&#182;</a></h1>
+<h2 id="Data-Generation">Data Generation<a class="anchor-link" href="#Data-Generation">&#182;</a></h2><h3 id="Hospital-Locations">Hospital Locations<a class="anchor-link" href="#Hospital-Locations">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -12009,48 +12031,28 @@ To toggle on/off the raw code, click <a href="javascript:code_toggle()">here</a>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Geocoding using Google geocoding API,</p>
-
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">gis_util</span><span class="o">.</span><span class="n">batch_geocode</span><span class="p">(</span><span class="n">addresses</span><span class="p">,</span> <span class="n">DATA_FOLDER</span><span class="p">,</span> <span class="s1">&#39;delhi_hospitals_latlong.csv&#39;</span><span class="p">,</span> <span class="n">API_KEY</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#Geocoding using Google geocoding API,</span>
 </pre></div>
 
 </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-<div class="prompt"></div>
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Geocoded: Ram Manohar Lohia Hospital,Baba Kharak Singh Marg,Connaught Place,New Delhi,Delhi 110001,India: OK
-Geocoded: North DMC Medical College &amp; Hindu Rao Hospital,DR. J.S. Kkaranwal Memorial Road,Malka Ganj,New Delhi,Delhi 110007,India: OK
-Geocoded: AIIMS,Safdarjung Enclave, Aurobindo Marg, Ansari Nagar,Haus Khas,New Delhi,Delhi 110029,India: OK
-Geocoded: Sushrut Trauma Centre,Ring Road, Behind I.P. College, Near Civil Lines Metro Station, Metcalf Road,Civil Lines,New Delhi,Delhi 110054,India: OK
-Geocoded: Deen Dayal Upadhyay Hospital,Clock Tower Chowk, Hari Enclave,Hari Nagar,New Delhi,Delhi 110064,India: OK
-Geocoded: Safdarjung Hospital,Safdarjung Campus,Ansari Nagar West,New Delhi,Delhi 110029,India: OK
-Geocoded: Lal Bahadur Shastri Hospital,Near Kalyanvas Colony, Mayur Vihar, Phase -II,Khichripur,New Delhi,Delhi 110091,India: OK
-Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
-</pre>
 </div>
-</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#results = gis_util.batch_geocode(addresses, DATA_FOLDER, &#39;delhi_hospitals_latlong.csv&#39;, API_KEY)</span>
+</pre></div>
 
+</div>
 </div>
 </div>
 
@@ -12280,7 +12282,7 @@ Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Crash-&amp;-taxi-Locations">Crash &amp; taxi Locations<a class="anchor-link" href="#Crash-&amp;-taxi-Locations">&#182;</a></h1>
+<h3 id="Crash-&amp;-taxi-Locations">Crash &amp; taxi Locations<a class="anchor-link" href="#Crash-&amp;-taxi-Locations">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -12289,7 +12291,7 @@ Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Real-data-availability-assumptions">Real data availability assumptions<a class="anchor-link" href="#Real-data-availability-assumptions">&#182;</a></h2>
+<h4 id="Real-data-availability-assumptions">Real data availability assumptions<a class="anchor-link" href="#Real-data-availability-assumptions">&#182;</a></h4>
 </div>
 </div>
 </div>
@@ -12312,8 +12314,8 @@ Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Simulated-Data">Simulated Data<a class="anchor-link" href="#Simulated-Data">&#182;</a></h2><ul>
-<li>To avoid prohibitively long computation times, the simulated crash dataset will have only 100 records, with timepoints anywhere in [(12 am, 1st January 2016), (12 am, 1st January 2017))</li>
+<h4 id="Simulated-Data">Simulated Data<a class="anchor-link" href="#Simulated-Data">&#182;</a></h4><ul>
+<li>To avoid prohibitively long computation times, the simulated crash dataset for this demo will have only 100 records, with timepoints anywhere in [(12 am, 1st January 2016), (12 am, 1st January 2017))</li>
 <li>Simulated data for taxi locations will have 1 log for 10000 taxis for [(12 am, 30th December 2015), (12 am, 1st January 2016)).</li>
 <li>All events in this dataset will be from within the National Capital Territory of Delhi and not the whole NCR.</li>
 </ul>
@@ -12569,7 +12571,7 @@ Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Getting-closest-hospital-&amp;-taxi-information">Getting closest hospital &amp; taxi information<a class="anchor-link" href="#Getting-closest-hospital-&amp;-taxi-information">&#182;</a></h1>
+<h2 id="Getting-closest-hospital-&amp;-taxi-information">Getting closest hospital &amp; taxi information<a class="anchor-link" href="#Getting-closest-hospital-&amp;-taxi-information">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -12820,7 +12822,7 @@ Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Closest pair of points in graphs (network) use weights (impedences) on nodes as the flavour in which they are close; the flavour in our case is distance or time taken to travel. Distance alone cannot give a true estimate of required time, since a trip that makes use of too many short side lanes can be slower than a longer path on an expressway. Speed limit thus is valuable information. This however is not available for this road network. We still can mimic this by assigning limits based on the type of the segments. This can then be used to weight the edges. Checking the types of road segments present,</p>
+<p>Closest pair of points in graphs (network) use weights (impedences) on nodes as the metric in which they are close; the metric in our case is distance or time taken to travel. Distance alone cannot give a true estimate of required time, since a trip that makes use of too many short side lanes can be slower than a longer path on an expressway. Speed limit thus is valuable information. This however is not available for this road network. We still can mimic this by assigning limits based on the type of the segments. This can then be used to weight the edges. Checking the types of road segments present,</p>
 
 </div>
 </div>
@@ -13294,7 +13296,7 @@ Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Closest-Pair-matching-computation">Closest Pair matching computation<a class="anchor-link" href="#Closest-Pair-matching-computation">&#182;</a></h2>
+<h3 id="Closest-matching-pair-computation">Closest matching pair computation<a class="anchor-link" href="#Closest-matching-pair-computation">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -13303,17 +13305,7 @@ Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Pandanas allows aggregated network information related queries on road networks with custom points by allowing new 'points of interest' overlayed on the base network. Closest node without any impedence to each of these 'points of interests' are determined, and these base nodes will then be used to compute distances from other nodes with impedence. For example, say we have a POI 'XYZ Hospital' to be added to Delhi network. Pandanas would choose the closest 'as the crow flies' node to this POI and assign this node as this POI's home node. Then, each of the other nodes' distance from it will be calculated from this node, taking account of usual impedences, such as length or maxspeed of edges connecting them. Expanding this to a list of POIs, pandana's one feature is to compute an aggregated list table for all nodes with k closest POIs to them. This table can be used to get closest POIs (say hospitals) from our nodes of interest, (say crash locations)</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Converting the street network to a pandana network object and adding hospitals as 'POI' to them,</p>
+<p>Pandana allows aggregated network information related queries on road networks with custom points by allowing new 'points of interest' overlayed on the base network. Pandana builds an aggregation table which constists of each of the nodes in the street network and their n closest pois. This aggregation table speeds up the estimation of closest pois (hospital/ taxis) from crash nodes. For example, say we have a POI 'XYZ Hospital' to be added to Delhi network. Pandana would choose the closest 'as the crow flies' node to this POI and assign this node as this POI's home node. Then, each of the other nodes' distance from it will be calculated from this node, taking account of usual impedences, such as length or maxspeed of edges connecting them, and this will be used to build an aggregation table with distances of each node from this POI. We can then query the closest hospital from the crash node from this table.</p>
 
 </div>
 </div>
@@ -13323,7 +13315,8 @@ Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
 <div class="prompt input_prompt">In&nbsp;[91]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pdnet_ncr</span><span class="o">.</span><span class="n">set_pois</span><span class="p">(</span><span class="s2">&quot;hospitals&quot;</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">df_delhi_hospitals</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">],</span> <span class="n">df_delhi_hospitals</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">])</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#Converting the street network to a pandana network object and adding hospitals as &#39;POI&#39; to them,</span>
+<span class="n">pdnet_ncr</span><span class="o">.</span><span class="n">set_pois</span><span class="p">(</span><span class="s2">&quot;hospitals&quot;</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">df_delhi_hospitals</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">],</span> <span class="n">df_delhi_hospitals</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">])</span>
 </pre></div>
 
 </div>
@@ -13351,16 +13344,7 @@ Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Computation-system-modules:">Computation system modules:<a class="anchor-link" href="#Computation-system-modules:">&#182;</a></h1>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Google-keys-repository-management:">Google keys repository management:<a class="anchor-link" href="#Google-keys-repository-management:">&#182;</a></h2>
+<h3 id="Google-keys-repository-management:">Google keys repository management:<a class="anchor-link" href="#Google-keys-repository-management:">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -13383,7 +13367,7 @@ Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Get-the-next-weekday:">Get the next weekday:<a class="anchor-link" href="#Get-the-next-weekday:">&#182;</a></h2>
+<h3 id="Get-the-next-weekday:">Get the next weekday:<a class="anchor-link" href="#Get-the-next-weekday:">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -13402,7 +13386,7 @@ Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Get-nearest-POIs:">Get nearest POIs:<a class="anchor-link" href="#Get-nearest-POIs:">&#182;</a></h2>
+<h3 id="Get-nearest-POIs:">Get nearest POIs:<a class="anchor-link" href="#Get-nearest-POIs:">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -13429,7 +13413,7 @@ Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Get-shortest-travel-times:">Get shortest travel times:<a class="anchor-link" href="#Get-shortest-travel-times:">&#182;</a></h2>
+<h3 id="Get-shortest-travel-times:">Get shortest travel times:<a class="anchor-link" href="#Get-shortest-travel-times:">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -13474,6 +13458,19 @@ Geocoded: GTB Hospital,GTB Enclave,Shahdara,New Delhi,Delhi 110095,India: OK
 
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+</div>
+</div>
+</div>
+
 </div>
     </div>
   </div>
